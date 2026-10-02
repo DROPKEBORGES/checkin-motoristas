@@ -1,151 +1,204 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in de Motoristas</title>
 
-<title>Check-in Motoristas</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-<style>
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
 
-body{
-    font-family: Arial;
-    text-align:center;
-    padding:40px;
-}
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
 
-.card{
-    max-width:500px;
-    margin:auto;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,.2);
-}
+        p {
+            color: #666;
+            font-size: 16px;
+        }
 
-button{
-    padding:15px;
-    font-size:18px;
-    cursor:pointer;
-}
+        .loading {
+            color: #0066cc;
+            font-weight: bold;
+        }
 
-.success{
-    color:green;
-    font-size:20px;
-}
+        .success {
+            color: green;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-.error{
-    color:red;
-    font-size:20px;
-}
+        .error {
+            color: red;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-</style>
+        .info {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+        }
 
+        .btn {
+            background: #0078d4;
+            color: white;
+            border: 0;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #005ea6;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="card">
 
-<h2>CHECK-IN DE MOTORISTAS</h2>
+    <h1>🚚 Check-in de Motoristas</h1>
 
-<p>Clique para validar sua localização.</p>
+    <p id="status" class="loading">
+        Validando acesso...
+    </p>
 
-<button onclick="validarGPS()">
-
-VALIDAR LOCALIZAÇÃO
-
-</button>
-
-<p id="resultado"></p>
+    <div id="detalhes"></div>
 
 </div>
 
 <script>
 
-const empresaLat = -18.884700;
-const empresaLon = -48.265000;
+    // ==============================
+    // CONFIGURAÇÕES
+    // ==============================
 
-const raioPermitido = 100;
+    const formsURL =
+    "https://forms.office.com/Pages/ResponsePage.aspx?id=...";
 
-const formsURL = "COLE_AQUI_SEU_LINK_DO_FORMS";
+    const faixasPermitidas = [
+        "104.28.63."
+    ];
 
-function calcularDistancia(lat1, lon1, lat2, lon2){
+    // Caso você descubra outra faixa,
+    // basta adicionar:
+    //
+    // "146.75.191."
 
-const R = 6371000;
+    // ==============================
 
-const dLat = (lat2-lat1) * Math.PI/180;
-const dLon = (lon2-lon1) * Math.PI/180;
+    const statusElement =
+    document.getElementById("status");
 
-const a =
-Math.sin(dLat/2) * Math.sin(dLat/2) +
-Math.cos(lat1*Math.PI/180) *
-Math.cos(lat2*Math.PI/180) *
-Math.sin(dLon/2) *
-Math.sin(dLon/2);
+    const detalhesElement =
+    document.getElementById("detalhes");
 
-const c = 2 * Math.atan2(
-Math.sqrt(a),
-Math.sqrt(1-a)
-);
+    function acessoNegado(ip)
+    {
+        statusElement.className = "error";
 
-return R * c;
+        statusElement.innerHTML =
+        "❌ Acesso não autorizado";
 
-}
+        detalhesElement.innerHTML =
+        `
+        <p>
+            Conecte-se ao Wi‑Fi <strong>ICL_Guest</strong>
+            para realizar o check-in.
+        </p>
 
-function validarGPS(){
+        <p class="info">
+            IP Detectado: ${ip}
+        </p>
+        `;
+    }
 
-navigator.geolocation.getCurrentPosition(
+    function acessoPermitido(ip)
+    {
+        statusElement.className = "success";
 
-function(position){
+        statusElement.innerHTML =
+        "✅ Rede autorizada";
 
-const lat = position.coords.latitude;
-const lon = position.coords.longitude;
+        detalhesElement.innerHTML =
+        `
+        <p>
+            Acesso validado.
+            Redirecionando para o formulário...
+        </p>
 
-const distancia =
-calcularDistancia(
-lat,
-lon,
-empresaLat,
-empresaLon
-);
+        <p class="info">
+            IP Detectado: ${ip}
+        </p>
+        `;
 
-if(distancia <= raioPermitido){
+        setTimeout(() => {
 
-document.getElementById("resultado").innerHTML =
-"<span class='success'>✅ Localização validada. Redirecionando...</span>";
+            window.location.href = formsURL;
 
-setTimeout(() => {
+        }, 2000);
+    }
 
-window.location.href = formsURL;
+    fetch("https://api.ipify.org?format=json")
 
-},2000);
+    .then(response => response.json())
 
-}
-else{
+    .then(data => {
 
-document.getElementById("resultado").innerHTML =
-"<span class='error'>❌ Você não está na unidade. Distância: "
-+ Math.round(distancia)
-+ " metros.</span>";
+        const ipAtual = data.ip;
 
-}
+        const autorizado =
+        faixasPermitidas.some(faixa =>
+            ipAtual.startsWith(faixa)
+        );
 
-},
+        if (autorizado)
+        {
+            acessoPermitido(ipAtual);
+        }
+        else
+        {
+            acessoNegado(ipAtual);
+        }
 
-function(){
+    })
 
-document.getElementById("resultado").innerHTML =
-"<span class='error'>Ative o GPS para continuar.</span>";
+    .catch(error => {
 
-}
+        console.error(error);
 
-);
+        statusElement.className = "error";
 
-}
+        statusElement.innerHTML =
+        "❌ Erro ao validar conexão.";
+
+    });
 
 </script>
 
 </body>
-
 </html>
