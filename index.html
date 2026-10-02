@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Check-in Motoristas</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    text-align:center;
+    padding:40px;
+}
+
+.card{
+    max-width:500px;
+    margin:auto;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.2);
+}
+
+button{
+    padding:15px;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.success{
+    color:green;
+    font-size:20px;
+}
+
+.error{
+    color:red;
+    font-size:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>CHECK-IN DE MOTORISTAS</h2>
+
+<p>Clique para validar sua localização.</p>
+
+<button onclick="validarGPS()">
+
+VALIDAR LOCALIZAÇÃO
+
+</button>
+
+<p id="resultado"></p>
+
+</div>
+
+<script>
+
+const empresaLat = -18.884700;
+const empresaLon = -48.265000;
+
+const raioPermitido = 100;
+
+const formsURL = "COLE_AQUI_SEU_LINK_DO_FORMS";
+
+function calcularDistancia(lat1, lon1, lat2, lon2){
+
+const R = 6371000;
+
+const dLat = (lat2-lat1) * Math.PI/180;
+const dLon = (lon2-lon1) * Math.PI/180;
+
+const a =
+Math.sin(dLat/2) * Math.sin(dLat/2) +
+Math.cos(lat1*Math.PI/180) *
+Math.cos(lat2*Math.PI/180) *
+Math.sin(dLon/2) *
+Math.sin(dLon/2);
+
+const c = 2 * Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
+);
+
+return R * c;
+
+}
+
+function validarGPS(){
+
+navigator.geolocation.getCurrentPosition(
+
+function(position){
+
+const lat = position.coords.latitude;
+const lon = position.coords.longitude;
+
+const distancia =
+calcularDistancia(
+lat,
+lon,
+empresaLat,
+empresaLon
+);
+
+if(distancia <= raioPermitido){
+
+document.getElementById("resultado").innerHTML =
+"<span class='success'>✅ Localização validada. Redirecionando...</span>";
+
+setTimeout(() => {
+
+window.location.href = formsURL;
+
+},2000);
+
+}
+else{
+
+document.getElementById("resultado").innerHTML =
+"<span class='error'>❌ Você não está na unidade. Distância: "
++ Math.round(distancia)
++ " metros.</span>";
+
+}
+
+},
+
+function(){
+
+document.getElementById("resultado").innerHTML =
+"<span class='error'>Ative o GPS para continuar.</span>";
+
+}
+
+);
+
+}
+
+</script>
+
+</body>
+
+</html>
