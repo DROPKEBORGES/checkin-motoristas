@@ -59,21 +59,6 @@
             color: #888;
             margin-top: 10px;
         }
-
-        .btn {
-            background: #0078d4;
-            color: white;
-            border: 0;
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-size: 16px;
-        }
-
-        .btn:hover {
-            background: #005ea6;
-        }
     </style>
 </head>
 
@@ -93,111 +78,93 @@
 
 <script>
 
-    // ==============================
-    // CONFIGURAÇÕES
-    // ==============================
-
     const formsURL =
-    "https://forms.cloud.microsoft/r/NFeaJjc6kP";
-
-   const faixasPermitidas = [
-    "104.28.63.",
-    "187.32.16."
-];
-
-    // Caso você descubra outra faixa,
-    // basta adicionar:
-    //
-    // "146.75.191."
-
-    // ==============================
+        "https://forms.cloud.microsoft/r/NFeaJjc6kP";
 
     const statusElement =
-    document.getElementById("status");
+        document.getElementById("status");
 
     const detalhesElement =
-    document.getElementById("detalhes");
+        document.getElementById("detalhes");
 
-    function acessoNegado(ip)
-    {
+    function acessoNegado(ip) {
+
         statusElement.className = "error";
 
         statusElement.innerHTML =
-        "❌ Acesso não autorizado";
+            "❌ Acesso não autorizado";
 
-        detalhesElement.innerHTML =
-        `
-        <p>
-            Conecte-se ao Wi‑Fi <strong>ICL_Guest</strong>
-            para realizar o check-in.
-        </p>
+        detalhesElement.innerHTML = `
+            <p>
+                Conecte-se ao Wi‑Fi <strong>ICL_Guest</strong>
+                para realizar o check-in.
+            </p>
 
-        <p class="info">
-            IP Detectado: ${ip}
-        </p>
+            <p class="info">
+                IP Detectado: ${ip}
+            </p>
         `;
     }
 
-    function acessoPermitido(ip)
-    {
+    function acessoPermitido(ip) {
+
         statusElement.className = "success";
 
         statusElement.innerHTML =
-        "✅ Rede autorizada";
+            "✅ Rede autorizada";
 
-        detalhesElement.innerHTML =
-        `
-        <p>
-            Acesso validado.
-            Redirecionando para o formulário...
-        </p>
+        detalhesElement.innerHTML = `
+            <p>
+                Acesso validado.
+                Redirecionando para o formulário...
+            </p>
 
-        <p class="info">
-            IP Detectado: ${ip}
-        </p>
+            <p class="info">
+                IP Detectado: ${ip}
+            </p>
         `;
 
         setTimeout(() => {
-
             window.location.href = formsURL;
-
         }, 2000);
     }
 
     fetch("https://api.ipify.org?format=json")
+        .then(response => response.json())
+        .then(data => {
 
-    .then(response => response.json())
+            const ipAtual = data.ip;
 
-    .then(data => {
+            const partes = ipAtual.split(".");
+            const ultimoOcteto = partes[3] || "";
 
-        const ipAtual = data.ip;
+            const autorizado104 =
+                ipAtual.startsWith("104.28.63.") &&
+                ultimoOcteto.startsWith("1");
 
-        const autorizado =
-        faixasPermitidas.some(faixa =>
-            ipAtual.startsWith(faixa)
-        );
+            const autorizado187 =
+                ipAtual.startsWith("187.32.16.");
 
-        if (autorizado)
-        {
-            acessoPermitido(ipAtual);
-        }
-        else
-        {
-            acessoNegado(ipAtual);
-        }
+            const autorizado =
+                autorizado104 || autorizado187;
 
-    })
+            if (autorizado) {
+                acessoPermitido(ipAtual);
+            } else {
+                acessoNegado(ipAtual);
+            }
 
-    .catch(error => {
+        })
+        .catch(error => {
 
-        console.error(error);
+            console.error(error);
 
-        statusElement.className = "error";
+            statusElement.className = "error";
 
-        statusElement.innerHTML =
-        "❌ Erro ao validar conexão.";
+            statusElement.innerHTML =
+                "❌ Erro ao validar conexão.";
 
-    });
+        });
 
 </script>
 
